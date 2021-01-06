@@ -20,7 +20,7 @@ class UnityWrapper(Env):
         - Only one visual observation
         - Only discrete and multi-discrete action spaces (no continuous action space)"""
 
-    def __init__(self, env_path, worker_id = 1, no_graphis = False, realtime_mode = False, config = None):
+    def __init__(self, env_path, worker_id = 1, no_graphis = False, realtime_mode = False, config = None, record_trajectory = False):
         """Instantiates the Unity Environment from a specified executable.
         
         Arguments:
@@ -31,12 +31,14 @@ class UnityWrapper(Env):
             no_graphis {bool} -- Whether to allow the executable to render or not (default: {False})
             realtime_mode {bool} -- Whether to run the environment in real time or as fast as possible (default: {False})
             config {dict} -- Specifies the reset parameters of the environment (default: {None})
+            record_trajectory {bool} -- Whether to record the trajectory of an entire episode. This can be used for video recording. (default: {False})
         """
         # Initialize channels
         self.reset_parameters = EnvironmentParametersChannel()
         self.engine_config = EngineConfigurationChannel()
 
         self._config = config
+        self._record = record_trajectory
         self._realtime_mode = realtime_mode
         if realtime_mode:
             self.engine_config.set_configuration_parameters(time_scale=1.0, width=1280, height=720)
@@ -118,6 +120,12 @@ class UnityWrapper(Env):
     def vector_observation_space(self):
         return self._vector_observatoin_space
 
+    @property
+    def get_episode_trajectory(self):
+        """Returns the trajectory of an entire episode as dictionary (vis_obs, vec_obs, rewards, actions). 
+        """
+        return self._trajectory if self._trajectory else None
+
     def reset(self, reset_params = None):
         """Resets the environment based on a global or just specified config.
         
@@ -150,6 +158,13 @@ class UnityWrapper(Env):
         
         # Retrieve initial observations
         vis_obs, vec_obs, _, _ = self._process_agent_info(info, terminal_info)
+
+        # Prepare trajectory recording
+        self._trajectory = {
+            "vis_obs": [vis_obs], "vec_obs": [vec_obs],
+            "rewards": [0.0], "actions": []
+        }
+
         return vis_obs, vec_obs
 
     def step(self, action):
@@ -174,6 +189,13 @@ class UnityWrapper(Env):
         # Process step results
         vis_obs, vec_obs, reward, done = self._process_agent_info(info, terminal_info)
         self._rewards.append(reward)
+
+        # Record trajectory data
+        if self._record:
+            self._trajectory["vis_obs"].append(vis_obs)
+            self._trajectory["vec_obs"].append(vec_obs)
+            self._trajectory["rewards"].append(reward)
+            self._trajectory["actions"].append(action)
 
         # Episode information
         if done:
