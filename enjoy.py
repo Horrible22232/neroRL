@@ -131,7 +131,7 @@ def main():
             # Store data for video recording
             actions.append(_actions)
             log_probs.append(probs)
-            entropies.append(sum(entropy))
+            entropies.append(entropy)
             values.append(value)
 
             # Step environment

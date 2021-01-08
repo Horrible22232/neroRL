@@ -150,7 +150,7 @@ class MinigridWrapper(Env):
     @property
     def action_names(self):
         """Returns a list of action names."""
-        return ["left", "right", "forward", "toggle", "pickup", "drop", "done"]
+        return [["left", "right", "forward", "toggle", "pickup", "drop", "done"]]
 
     @property
     def get_episode_trajectory(self):
@@ -190,7 +190,7 @@ class MinigridWrapper(Env):
         # Prepare trajectory recording
         self._trajectory = {
             "vis_obs": [self._env.render(tile_size = 96, mode = "rgb_array").astype(np.uint8)], "vec_obs": [None],
-            "rewards": [0.0], "frame_rate": 2
+            "rewards": [0.0], "frame_rate": 1
         }
 
         return vis_obs, None
