@@ -9,6 +9,7 @@ import torch
 import numpy as np
 from docopt import docopt
 from gym import spaces
+import sys
 
 from neroRL.utils.yaml_parser import YamlParser
 from neroRL.trainers.PPO.otc_model import OTCModel
@@ -19,6 +20,7 @@ from neroRL.environments.procgen_wrapper import ProcgenWrapper
 from neroRL.environments.cartpole_wrapper import CartPoleWrapper
 from neroRL.environments.wrapper import wrap_environment
 from neroRL.utils.serialization import load_checkpoint
+from neroRL.utils.video_recorder import VideoRecorder
 
 # Setup logger
 logging.basicConfig(level = logging.INFO, handlers=[])
@@ -39,12 +41,19 @@ def main():
         --untrained                Whether an untrained model should be used [default: False].
         --worker-id=<n>            Sets the port for each environment instance [default: 2].
         --seed=<n>                 The to be played seed of an episode [default: 0].
+        --video=<path>             Specify a path for saving a video, if video recording is desired [default: ./video.avi].
     """
     options = docopt(_USAGE)
     untrained = options["--untrained"]
     config_path = options["--config"]
     worker_id = int(options["--worker-id"])
     seed = int(options["--seed"])
+    video_path = options["--video"]
+    record_video = False
+
+    # Determine whether to record a video
+    for i, arg in enumerate(sys.argv):
+            record_video = "--video" in arg
 
     # Load environment, model, evaluation and training parameters
     configs = YamlParser(config_path).get_config()
@@ -94,22 +103,56 @@ def main():
 
     # Play episode
     logger.info("Step 4: Run single episode in realtime . . .")
+
+    # Store data for video recording
+    log_probs = []
+    entropies = []
+    values = []
+    actions = []
+
     with torch.no_grad():
         while not done:
-            # Sample action
-            policy, _, recurrent_cell = model(np.expand_dims(vis_obs, 0) if vis_obs is not None else None,
+            # Forward the neural net
+            policy, value, recurrent_cell = model(np.expand_dims(vis_obs, 0) if vis_obs is not None else None,
                                 np.expand_dims(vec_obs, 0) if vec_obs is not None else None,
                                 recurrent_cell,
                                 device)
 
-            actions = []
+            _actions = []
+            probs = []
+            entropy = []
+            # Sample action
             for action_branch in policy:
                 action = action_branch.sample()
-                actions.append(action.item())
+                _actions.append(action.item())
+                probs.append(action_branch.probs)
+                entropy.append(action_branch.entropy().item())
 
-            vis_obs, vec_obs, _, done, info = env.step(actions)
+            # Store data for video recording
+            actions.append(_actions)
+            log_probs.append(probs)
+            entropies.append(sum(entropy))
+            values.append(value)
+
+            # Step environment
+            vis_obs, vec_obs, _, done, info = env.step(_actions)
 
     logger.info("Episode Reward: " + str(info["reward"]))
+
+    # Complete video data
+    if record_video:
+        trajectory_data = env.get_episode_trajectory
+        trajectory_data["action_names"] = env.action_names
+        trajectory_data["actions"] = actions
+        trajectory_data["log_probs"] = log_probs
+        trajectory_data["entropies"] = entropies
+        trajectory_data["values"] = values
+        trajectory_data["episode_reward"] = info["reward"]
+        trajectory_data["seed"] = seed
+        # Init video recorder
+        video_recorder = VideoRecorder(video_path)
+        # Render and serialize video
+        video_recorder.render_video(trajectory_data)
 
 if __name__ == "__main__":
     main()

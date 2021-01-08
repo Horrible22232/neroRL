@@ -162,7 +162,7 @@ class UnityWrapper(Env):
         # Prepare trajectory recording
         self._trajectory = {
             "vis_obs": [vis_obs], "vec_obs": [vec_obs],
-            "rewards": [0.0], "actions": []
+            "rewards": [0.0], "actions": [], "frame_rate": 20
         }
 
         return vis_obs, vec_obs

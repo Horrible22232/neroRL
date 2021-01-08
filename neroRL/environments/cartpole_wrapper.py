@@ -102,7 +102,7 @@ class CartPoleWrapper(Env):
         # Prepare trajectory recording
         self._trajectory = {
             "vis_obs": [self._env.render(mode="rgb_array")], "vec_obs": [vec_obs],
-            "rewards": [0.0], "actions": []
+            "rewards": [0.0], "actions": [], "frame_rate": 20
         }
 
         return vis_obs, vec_obs * self._obs_mask

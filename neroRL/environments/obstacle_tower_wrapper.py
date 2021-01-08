@@ -1,5 +1,6 @@
 import numpy as np
 import gym
+import copy
 from gym import error, spaces
 from random import randint
 
@@ -142,8 +143,8 @@ class ObstacleTowerWrapper(Env):
 
         # Prepare trajectory recording
         self._trajectory = {
-            "vis_obs": [vis_obs], "vec_obs": [vec_obs],
-            "rewards": [0.0], "actions": []
+            "vis_obs": [(vis_obs * 255).astype(np.uint8)], "vec_obs": [vec_obs],
+            "rewards": [0.0], "actions": [], "frame_rate": 20
         }
 
         if self._retro_vis_obs:
@@ -186,7 +187,7 @@ class ObstacleTowerWrapper(Env):
 
         # Record trajectory data
         if self._record:
-            self._trajectory["vis_obs"].append(vis_obs)
+            self._trajectory["vis_obs"].append((vis_obs * 255).astype(np.uint8))
             self._trajectory["vec_obs"].append(vec_obs)
             self._trajectory["rewards"].append(reward)
             self._trajectory["actions"].append(action)
