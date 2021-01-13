@@ -15,7 +15,7 @@ class VideoRecorder:
         self.thickness = cv2.FILLED
         self.text_color = (255, 255, 255)
         self.margin = 2
-        self.width = 420 * 2                             # Video dimensions, width times 2 because of the debug frame
+        self.width = 420                              # Video dimensions
         self.height = 420
         self.video_path = video_path
         self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')   # Video codec
@@ -28,7 +28,7 @@ class VideoRecorder:
             trajectory_data {dift} -- This dictionary provides all the necessary informatio to render one episode of an agent behaving in its environment.
         """
         # Init VideoWriter, the frame rate is defined by each environment individually
-        out = cv2.VideoWriter(self.video_path + ".mp4", self.fourcc,trajectory_data["frame_rate"], (self.width, self.height))
+        out = cv2.VideoWriter(self.video_path + "_seed_" + str(trajectory_data["seed"]) + ".mp4", self.fourcc,trajectory_data["frame_rate"], (self.width * 2, self.height))
         for i in range(len(trajectory_data["vis_obs"])):
             # Setup environment frame
             env_frame = trajectory_data["vis_obs"][i][...,::-1] # Convert RGB to BGR, OpenCV expects BGR
@@ -45,6 +45,8 @@ class VideoRecorder:
                 self.draw_text_overlay(debug_frame, 5, 40, round(trajectory_data["values"][i].item(), 5), "value")
                 # Current entropy
                 self.draw_text_overlay(debug_frame, 215, 40, sum(trajectory_data["entropies"][i]), "entropy")
+                # Environment seed
+                self.draw_text_overlay(debug_frame, 215, 60, trajectory_data["seed"], "seed")
                 # Selected action
                 for index, action in enumerate(trajectory_data["actions"][i]):
                     self.draw_text_overlay(debug_frame, 5 + (210 * (index % 2)), 60 + (20 * (int(index / 2))), str(action) + " " + trajectory_data["action_names"][index][action], "action " + str(index))

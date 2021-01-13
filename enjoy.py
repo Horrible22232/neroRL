@@ -41,7 +41,7 @@ def main():
         --untrained                Whether an untrained model should be used [default: False].
         --worker-id=<n>            Sets the port for each environment instance [default: 2].
         --seed=<n>                 The to be played seed of an episode [default: 0].
-        --video=<path>             Specify a path for saving a video, if video recording is desired [default: ./video].
+        --video=<path>             Specify a path for saving a video, if video recording is desired. The file's extension will be set automatically. [default: ./video].
     """
     options = docopt(_USAGE)
     untrained = options["--untrained"]
