@@ -41,7 +41,7 @@ def main():
         --untrained                Whether an untrained model should be used [default: False].
         --worker-id=<n>            Sets the port for each environment instance [default: 2].
         --seed=<n>                 The to be played seed of an episode [default: 0].
-        --video=<path>             Specify a path for saving a video, if video recording is desired [default: ./video.avi].
+        --video=<path>             Specify a path for saving a video, if video recording is desired [default: ./video].
     """
     options = docopt(_USAGE)
     untrained = options["--untrained"]
@@ -49,11 +49,14 @@ def main():
     worker_id = int(options["--worker-id"])
     seed = int(options["--seed"])
     video_path = options["--video"]
-    record_video = False
 
-    # Determine whether to record a video
+    # Determine whether to record a video. A video is only recorded if the video flag is used.
+    record_video = False
     for i, arg in enumerate(sys.argv):
-            record_video = "--video" in arg
+        if "--video" in arg:
+            record_video = True
+            logger.info("Step 0: Video recording enabled. Video will be saved to " + video_path)
+            break
 
     # Load environment, model, evaluation and training parameters
     configs = YamlParser(config_path).get_config()
