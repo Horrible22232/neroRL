@@ -83,6 +83,7 @@ class ProcgenWrapper(Env):
     def get_episode_trajectory(self):
         """Returns the trajectory of an entire episode as dictionary (vis_obs, vec_obs, rewards, actions). 
         """
+        self._trajectory["action_names"] = self.action_names
         return self._trajectory if self._trajectory else None
 
     def reset(self, reset_params = None):

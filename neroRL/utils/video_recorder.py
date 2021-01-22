@@ -15,7 +15,7 @@ class VideoRecorder:
         self.thickness = cv2.FILLED
         self.text_color = (255, 255, 255)
         self.margin = 2
-        self.width = 420                              # Video dimensions
+        self.width = 420                                # Video dimensions
         self.height = 420
         self.video_path = video_path
         self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')   # Video codec
